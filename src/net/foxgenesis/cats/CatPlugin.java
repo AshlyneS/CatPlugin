@@ -1,11 +1,10 @@
 package net.foxgenesis.cats;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import net.foxgenesis.cats.listener.RandomCats;
+import net.foxgenesis.util.resource.ConfigType;
 import net.foxgenesis.watame.WatameBot;
 import net.foxgenesis.watame.plugin.CommandProvider;
 import net.foxgenesis.watame.plugin.IEventStore;
@@ -25,16 +24,22 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
  * @author Ashley
  *
  */
-@PluginConfiguration(defaultFile = "/META-INF/cats/settings.properties", identifier = "catSettings", outputFile = "cats/settings.properties")
+@PluginConfiguration(defaultFile = "/META-INF/cats/settings.properties", identifier = "catSettings", outputFile = "cats/settings.properties", type = ConfigType.PROPERTIES)
 public class CatPlugin extends Plugin implements CommandProvider {
-	private volatile String catAPIKey;
+	private final String catAPIKey;
 
-	@Override
-	protected void onConstruct(Properties meta, Map<String, Configuration> configs) {
-		for (String id : configs.keySet())
+	public CatPlugin() {
+		super();
+		String key = null;
+
+		for (String id : configurationKeySet()) {
+			Configuration config = getConfiguration(id);
 			switch (id) {
-				case "catSettings" -> { catAPIKey = configs.get(id).getString("thecatapi_key"); }
+				case "catSettings" -> { key = config.getString("thecatapi_key", key); }
 			}
+		}
+
+		catAPIKey = key;
 	}
 
 	@Override
