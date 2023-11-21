@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import net.foxgenesis.cats.listener.RandomCats;
+import net.foxgenesis.cats.listener.RandomDogs;
 import net.foxgenesis.util.resource.ConfigType;
 import net.foxgenesis.watame.plugin.IEventStore;
 import net.foxgenesis.watame.plugin.Plugin;
@@ -49,7 +50,7 @@ public class CatPlugin extends Plugin implements CommandProvider, RequiresIntent
 
 	@Override
 	protected void init(IEventStore eventStore) throws SeverePluginException {
-		eventStore.registerListeners(this, new RandomCats(catAPIKey));
+		eventStore.registerListeners(this, new RandomCats(catAPIKey), new RandomDogs(catAPIKey));
 	}
 
 	@Override
@@ -66,11 +67,15 @@ public class CatPlugin extends Plugin implements CommandProvider, RequiresIntent
 	@Override
 	public Collection<CommandData> getCommands() {
 		return Set.of(
-//				// Search cat images
+				// Search cat images
 				Commands.slash("cat", "Get images of cats")
 						.addOption(OptionType.STRING, "breed", "Breed to search for", false, true)
 						.addOption(OptionType.BOOLEAN, "server-only", "Only search for cats from server members")
 						.addOption(OptionType.USER, "from", "Search for cats from a user (server-only must be true)"),
+
+				// Search dog images
+				Commands.slash("dog", "Get images of dogs").addOption(OptionType.STRING, "breed", "Breed to search for",
+						false, true),
 
 				// Upload cat pictures
 				Commands.slash("catupload", "Upload a picture of a cat").setGuildOnly(true)

@@ -1,6 +1,6 @@
 package net.foxgenesis.cats.bean;
 
-public class Weight {
+public class Measurement {
 
 	private String imperial;
 	private String metric;
@@ -23,7 +23,7 @@ public class Weight {
 
 	@Override
 	public String toString() {
-		return "Weight [" + (imperial != null ? "imperial=" + imperial + ", " : "")
+		return "Measurement [" + (imperial != null ? "imperial=" + imperial + ", " : "")
 				+ (metric != null ? "metric=" + metric : "") + "]";
 	}
 }

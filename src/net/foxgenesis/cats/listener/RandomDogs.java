@@ -3,16 +3,14 @@ package net.foxgenesis.cats.listener;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import net.foxgenesis.cats.api.Order;
 import net.foxgenesis.cats.api.SearchRequest;
-import net.foxgenesis.cats.api.TheCatAPI;
+import net.foxgenesis.cats.api.TheDogAPI;
 import net.foxgenesis.cats.bean.Breed;
-import net.foxgenesis.cats.bean.CatPicture;
+import net.foxgenesis.cats.bean.DogPicture;
 import net.foxgenesis.util.Pair;
 import net.foxgenesis.watame.util.Colors;
 import net.foxgenesis.watame.util.DiscordUtils;
@@ -23,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message.Attachment;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -36,22 +33,22 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import okhttp3.OkHttpClient;
 
-public class RandomCats extends ListenerAdapter {
-	private static final Logger logger = LoggerFactory.getLogger(RandomCats.class);
+public class RandomDogs extends ListenerAdapter {
+	private static final Logger logger = LoggerFactory.getLogger(RandomDogs.class);
 
 	private static final Emoji EMOJI_HAPPY = Emoji.fromCustom("happeh", 478378484025131010L, false);
 
-	private static final String FOOTER_TEXT = "The Cat API";
-	private static final String FOOTER_ICON = "https://thecatapi.com/favicon.ico";
+	private static final String FOOTER_TEXT = "The Dog API";
+	private static final String FOOTER_ICON = "https://thedogapi.com/favicon.ico";
 
 	private static final String FIELD_FORMAT = "**%s:** %s\n";
 	private static final String FLAG_FORMAT = ":flag_%s:";
 
-	private final TheCatAPI api;
+	private final TheDogAPI api;
 	private final OkHttpClient client;
 
-	public RandomCats(String apiKey) {
-		api = new TheCatAPI(apiKey);
+	public RandomDogs(String apiKey) {
+		api = new TheDogAPI(apiKey);
 
 		client = new OkHttpClient().newBuilder().callTimeout(3, TimeUnit.SECONDS).build();
 	}
@@ -60,71 +57,23 @@ public class RandomCats extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		try {
 			switch (event.getFullCommandName()) {
-				case "cat" -> {
+				case "dog" -> {
 					// Parse options
 					String[] breeds = { event.getOption("breed", OptionMapping::getAsString) };
-					boolean serverOnly = event.getOption("server-only", false, OptionMapping::getAsBoolean);
-					String subid = Optional.ofNullable(event.getOption("from", OptionMapping::getAsMember))
-							.map(Member::getId).orElse("");
 
 					// Build request
-					SearchRequest request;
-					if (serverOnly) {
-						SearchRequest.Builder.Uploaded b = new SearchRequest.Builder.Uploaded();
-						b.setBreeds(breeds);
-						b.setSubID(subid);
-						b.setOrder(Order.RANDOM);
-						b.setLimit(1);
-						request = b.build();
-					} else {
-						SearchRequest.Builder.Default b = new SearchRequest.Builder.Default();
-						b.setBreeds(breeds);
-						request = b.build();
-					}
+					SearchRequest.Builder.Default b = new SearchRequest.Builder.Default();
+					b.setBreeds(breeds);
+					SearchRequest request = b.build();
 
 					// Search
 					event.deferReply().queue();
 					api.search(client, request).orTimeout(10, TimeUnit.SECONDS)
 							.whenCompleteAsync((list, e) -> handleSearchResult(list, e, event));
 				}
-				case "catupload" -> {
-					Attachment attachment = event.getOption("file", OptionMapping::getAsAttachment);
-					String subid = event.getMember().getId();
-
-					event.deferReply().queue();
-
-					// New client because we are doing a longer operation than normal
-					OkHttpClient tempClient = client.newBuilder().callTimeout(10, TimeUnit.SECONDS).build();
-					// Upload picture
-					api.uploadPicture(tempClient, attachment, subid).orTimeout(10, TimeUnit.SECONDS)
-							.whenCompleteAsync((response, e) -> {
-								// Check for errors
-								if (e != null) {
-									event.getHook()
-											.editOriginalEmbeds(
-													Response.error("An error occured. Please try again later."))
-											.queue();
-									logger.error("Error occured during api request", e);
-									return;
-								}
-
-								// Create embed
-								EmbedBuilder builder = new EmbedBuilder();
-								builder.setColor(response.isApproved() ? Colors.SUCCESS
-										: response.isPending() ? Colors.WARNING : Colors.ERROR);
-								builder.setTitle("Uploaded");
-								builder.setImage(response.getUrl());
-								builder.addField("Pending", "" + response.isPending(), true);
-								builder.addField("Approved", "" + response.isApproved(), true);
-								builder.setFooter(FOOTER_TEXT, FOOTER_ICON);
-
-								// Display result
-								event.getHook().editOriginalEmbeds(builder.build()).queue();
-							});
-				}
 			}
 		} catch (Exception e) {
-			logger.error("Error in RandomCats", e);
+			logger.error("Error in RandomDogs", e);
 			MessageEmbed embed = Response.error("An error occured. Please try again later.");
 
 			if (event.isAcknowledged())
@@ -137,7 +86,7 @@ public class RandomCats extends ListenerAdapter {
 	@Override
 	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
 		switch (event.getFullCommandName()) {
-			case "cat" -> {
+			case "dog" -> {
 				switch (event.getFocusedOption().getName()) {
 					case "breed" -> {
 						// Get all cat breeds
@@ -177,7 +126,7 @@ public class RandomCats extends ListenerAdapter {
 		}
 	}
 
-	private static void handleSearchResult(CatPicture[] list, Throwable e, IReplyCallback event) {
+	private static void handleSearchResult(DogPicture[] list, Throwable e, IReplyCallback event) {
 		// Check for errors
 		if (e != null) {
 			event.getHook().editOriginalEmbeds(Response.error("An error occured. Please try again later.")).queue();
@@ -191,19 +140,19 @@ public class RandomCats extends ListenerAdapter {
 
 		try {
 			// Get first result
-			CatPicture cat = list[0];
+			DogPicture dog = list[0];
 
 			// Construct embed
 			EmbedBuilder builder = new EmbedBuilder();
 			builder.setColor(Colors.INFO);
-			builder.setImage(cat.getUrl());
+			builder.setImage(dog.getUrl());
 			builder.setFooter(FOOTER_TEXT, FOOTER_ICON);
 
 			StringBuilder b = new StringBuilder();
 
 			// Append breed information if present
-			if (cat.getBreeds() != null && cat.getBreeds().length > 0) {
-				Breed breed = cat.getBreeds()[0];
+			if (dog.getBreeds() != null && dog.getBreeds().length > 0) {
+				Breed breed = dog.getBreeds()[0];
 
 				b.append(FIELD_FORMAT.formatted("Breed", breed.getName()));
 				b.append(FIELD_FORMAT.formatted("Origin",
@@ -215,6 +164,9 @@ public class RandomCats extends ListenerAdapter {
 
 				b.append(FIELD_FORMAT.formatted("Temperament", breed.getTemperament()));
 
+				b.append(FIELD_FORMAT.formatted("Breed Group", breed.getBreed_group()));
+				b.append(FIELD_FORMAT.formatted("Bred For", breed.getBred_for()));
+
 				if (!(breed.getWikipedia_url() == null || breed.getWikipedia_url().isBlank())) {
 					b.append("\n");
 					b.append("[Wikipedia Page](" + breed.getWikipedia_url() + ")");
@@ -222,7 +174,7 @@ public class RandomCats extends ListenerAdapter {
 			}
 
 			// Append discord user if present
-			String subid = cat.getSub_id();
+			String subid = dog.getSub_id();
 			if (!(subid == null || subid.isBlank())) {
 				int index = subid.indexOf(':');
 				if (index == -1)

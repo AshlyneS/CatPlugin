@@ -4,7 +4,11 @@ import java.util.Objects;
 
 public class Breed {
 
-	private Weight weight;
+	private Measurement weight;
+	private Measurement height;
+	private String bred_for;
+	private String breed_group;
+	private String history;
 	private String id;
 	private String name;
 	private String cfa_url;
@@ -49,12 +53,44 @@ public class Breed {
 	private String reference_image_id;
 	private CatPicture image;
 
-	public Weight getWeight() {
+	public Measurement getWeight() {
 		return weight;
 	}
 
-	public void setWeight(Weight weight) {
+	public void setWeight(Measurement weight) {
 		this.weight = weight;
+	}
+
+	public Measurement getHeight() {
+		return height;
+	}
+
+	public void setHeight(Measurement height) {
+		this.height = height;
+	}
+
+	public String getBred_for() {
+		return bred_for;
+	}
+
+	public void setBred_for(String bred_for) {
+		this.bred_for = bred_for;
+	}
+
+	public String getBreed_group() {
+		return breed_group;
+	}
+
+	public void setBreed_group(String breed_group) {
+		this.breed_group = breed_group;
+	}
+
+	public String getHistory() {
+		return history;
+	}
+
+	public void setHistory(String history) {
+		this.history = history;
 	}
 
 	public String getId() {
