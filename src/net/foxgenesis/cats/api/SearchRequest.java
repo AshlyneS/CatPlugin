@@ -6,17 +6,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-import net.foxgenesis.cats.bean.CatPicture;
-
-public class SearchRequest<T> {
+public class SearchRequest {
 	private final Map<String, String> properties;
 	private final String endpoint;
-	private final Class<T> responseClass;
 
-	SearchRequest(Builder<T> builder) {
+	SearchRequest(Builder builder) {
 		this.properties = Map.copyOf(Objects.requireNonNull(builder.map));
 		this.endpoint = Objects.requireNonNull(builder.endpoint);
-		this.responseClass = Objects.requireNonNull(builder.responseClass);
 	}
 
 	public void forEach(BiConsumer<String, String> consumer) {
@@ -32,15 +28,11 @@ public class SearchRequest<T> {
 		return endpoint;
 	}
 
-	public Class<T> getResponseType() {
-		return responseClass;
-	}
-
-	public static abstract class Builder<T> implements IBuilder<SearchRequest<T>> {
-		public static class Default extends Builder<CatPicture[]> {
+	public static abstract class Builder implements IBuilder<SearchRequest> {
+		public static class Default extends Builder {
 
 			public Default() {
-				super("images/search", CatPicture[].class);
+				super("images/search");
 			}
 
 			public Default setSize(Size size) {
@@ -71,10 +63,10 @@ public class SearchRequest<T> {
 			}
 		}
 
-		public static class Uploaded extends Builder<CatPicture[]> {
+		public static class Uploaded extends Builder {
 
 			public Uploaded() {
-				super("images", CatPicture[].class);
+				super("images");
 			}
 
 			public Uploaded setSubID(String subid) {
@@ -115,41 +107,39 @@ public class SearchRequest<T> {
 
 		protected final Map<String, String> map = new HashMap<>();
 		protected final String endpoint;
-		protected final Class<T> responseClass;
 
-		Builder(String endpoint, Class<T> responseClass) {
+		Builder(String endpoint) {
 			this.endpoint = Objects.requireNonNull(endpoint);
-			this.responseClass = Objects.requireNonNull(responseClass);
 		}
 
-		public Builder<T> setOrder(Order order) {
+		public Builder setOrder(Order order) {
 			map.put("order", Optional.ofNullable(order).map(Object::toString).orElse(""));
 			return this;
 		}
 
-		public Builder<T> setPage(int page) {
+		public Builder setPage(int page) {
 			map.put("page", page + "");
 			return this;
 		}
 
-		public Builder<T> setLimit(int limit) {
+		public Builder setLimit(int limit) {
 			map.put("limit", limit + "");
 			return this;
 		}
 
-		public Builder<T> setCategories(int[] categories) {
+		public Builder setCategories(int[] categories) {
 			map.put("category_ids", Optional.ofNullable(categories).map(Builder::joinInts).orElse(""));
 			return this;
 		}
 
-		public Builder<T> setBreeds(String[] breeds) {
+		public Builder setBreeds(String[] breeds) {
 			map.put("breed_ids", Optional.ofNullable(breeds).map(Builder::joinStrings).orElse(""));
 			return this;
 		}
 
 		@Override
-		public SearchRequest<T> build() {
-			return new SearchRequest<>(this);
+		public SearchRequest build() {
+			return new SearchRequest(this);
 		}
 	}
 }
